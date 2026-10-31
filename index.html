@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#183153">
+<link rel="manifest" href="manifest.json">
+<title>RepeatStudy</title>
+<style>
+:root{--navy:#183153;--blue:#2f65a7;--pale:#eef4fb;--line:#d7e1ee;--ink:#172333;--muted:#637083;--white:#fff;--green:#1f7954;--red:#a63737}
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:var(--navy);color:white;padding:20px 16px 18px}header h1{margin:0;font-size:1.55rem}header p{margin:6px 0 0;color:#dce8f7;font-size:.94rem}
+main{max-width:850px;margin:0 auto;padding:16px}
+.card{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px;box-shadow:0 3px 12px #1831530a}
+h2{font-size:1.05rem;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:12px}label{display:block;font-weight:650;font-size:.9rem;margin-bottom:6px}
+input,textarea,select{width:100%;border:1px solid #bdcbdc;border-radius:10px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}textarea{min-height:100px;resize:vertical}
+button{border:0;border-radius:11px;padding:11px 14px;font:inherit;font-weight:700;cursor:pointer;background:var(--blue);color:white}button.secondary{background:var(--pale);color:var(--navy);border:1px solid var(--line)}button.danger{background:#fff0f0;color:var(--red);border:1px solid #f0cccc}button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row button{flex:1}.small{font-size:.85rem;color:var(--muted)}.status{background:var(--pale);border-radius:10px;padding:12px;margin-top:10px;line-height:1.45}.progress{height:8px;background:#e5ebf3;border-radius:99px;overflow:hidden;margin-top:10px}.bar{height:100%;width:0;background:var(--green);transition:width .2s}
+.item{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}.item strong{display:block;margin-bottom:5px}.item p{white-space:pre-wrap;margin:4px 0 8px}.item .row button{font-size:.86rem;padding:8px}
+.badge{display:inline-block;background:#e8f4ee;color:#1b6749;border-radius:999px;padding:3px 8px;font-size:.78rem;font-weight:700}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:10px 18px 28px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}header{padding:18px 15px}main{padding:12px}.card{padding:14px}}
+</style>
+</head>
+<body>
+<header><h1>RepeatStudy</h1><p>Your question-and-answer audio repeater</p></header>
+<main>
+<section class="card">
+<h2>1. Add a study question</h2>
+<div class="grid">
+<div class="field"><label for="subject">Subject</label><select id="subject"><option>Science</option><option>Mathematics</option><option>Social Studies</option><option>English</option><option>Alternative English</option><option>Electronics</option><option>Other</option></select></div>
+<div class="field"><label for="chapter">Chapter / topic</label><input id="chapter" placeholder="e.g. Photosynthesis"></div>
+</div>
+<div class="field"><label for="question">Question</label><textarea id="question" placeholder="Type your question here"></textarea></div>
+<div class="field"><label for="answer">Answer</label><textarea id="answer" placeholder="Type the answer here"></textarea></div>
+<div class="row"><button id="saveBtn">Save question</button><button class="secondary" id="clearBtn">Clear form</button></div>
+<p class="small">Saved questions stay in this browser on this device. Export a backup before clearing browser data.</p>
+</section>
+
+<section class="card">
+<h2>2. Repetition settings</h2>
+<div class="grid">
+<div class="field"><label for="count">Repeat count</label><input id="count" type="number" min="1" max="500" value="20"></div>
+<div class="field"><label for="speed">Speaking speed</label><select id="speed"><option value="0.75">Slow</option><option value="1" selected>Normal</option><option value="1.2">Fast</option></select></div>
+<div class="field"><label for="pause">Pause after question (seconds)</label><select id="pause"><option value="3" selected>3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="0">No pause</option></select></div>
+<div class="field"><label for="gap">Pause after answer (seconds)</label><select id="gap"><option value="3" selected>3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="0">No pause</option></select></div>
+</div>
+<div class="field"><label for="voice">Voice</label><select id="voice"><option value="">Default phone voice</option></select><p class="small">Available voices depend on your phone's text-to-speech settings.</p></div>
+<div class="row"><button id="startBtn">▶ Start repetition</button><button class="secondary" id="pauseBtn" disabled>Ⅱ Pause</button><button class="danger" id="stopBtn" disabled>■ Stop</button></div>
+<div class="status" id="status" role="status" aria-live="polite">Ready. Add or choose a saved question, then press Start.</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+</section>
+
+<section class="card">
+<h2>3. Saved questions <span class="badge" id="totalBadge">0 saved</span></h2>
+<div class="grid">
+<div class="field"><label for="filterSubject">Filter by subject</label><select id="filterSubject"><option value="">All subjects</option><option>Science</option><option>Mathematics</option><option>Social Studies</option><option>English</option><option>Alternative English</option><option>Electronics</option><option>Other</option></select></div>
+<div class="field"><label for="filterChapter">Search chapter or question</label><input id="filterChapter" placeholder="Type to search"></div>
+</div>
+<div class="row"><button class="secondary" id="repeatAllBtn">▶ Repeat filtered list</button><button class="secondary" id="exportBtn">Export backup</button><button class="secondary" id="importBtn">Import backup</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+<div id="list"></div>
+</section>
+</main>
+<footer>RepeatStudy • Keep the page open while audio is playing. You can pause or stop at any time.</footer>
+<script>
+const $=id=>document.getElementById(id);
+const KEY='repeatstudy_questions_v2';
+let questions=loadQuestions(), currentRun=null, stopRequested=false, paused=false, pauseWaiter=null, voices=[];
+function loadQuestions(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(questions));renderList()}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function getForm(){return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),subject:$('subject').value,chapter:$('chapter').value.trim()||'General',question:$('question').value.trim(),answer:$('answer').value.trim()}}
+function clearForm(){$('question').value='';$('answer').value='';$('chapter').value='';}
+$('saveBtn').addEventListener('click',()=>{const q=getForm();if(!q.question||!q.answer){alert('Please enter both a question and an answer.');return}questions.unshift(q);persist();clearForm();$('status').textContent='Question saved. Choose it below or add another.'});
+$('clearBtn').addEventListener('click',clearForm);
+function filtered(){const s=$('filterSubject').value,t=$('filterChapter').value.toLowerCase().trim();return questions.filter(q=>(!s||q.subject===s)&&(!t||(q.chapter+' '+q.question+' '+q.answer).toLowerCase().includes(t)))}
+function renderList(){const arr=filtered();$('totalBadge').textContent=questions.length+' saved';$('list').innerHTML=arr.length?arr.map(q=>`<div class="item"><strong>${esc(q.subject)} · ${esc(q.chapter)}</strong><p><b>Q:</b> ${esc(q.question)}</p><p><b>A:</b> ${esc(q.answer)}</p><div class="row"><button class="secondary" data-play="${q.id}">Repeat this</button><button class="secondary" data-edit="${q.id}">Edit</button><button class="danger" data-delete="${q.id}">Delete</button></div></div>`).join(''):'<p class="small">No saved questions match. Add a question above.</p>'}
+$('filterSubject').addEventListener('change',renderList);$('filterChapter').addEventListener('input',renderList);
+$('list').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const q=questions.find(x=>x.id===b.dataset.play||x.id===b.dataset.edit||x.id===b.dataset.delete);if(!q)return;if(b.dataset.play)runItems([q]);if(b.dataset.edit){$('subject').value=q.subject;$('chapter').value=q.chapter;$('question').value=q.question;$('answer').value=q.answer;questions=questions.filter(x=>x.id!==q.id);persist();window.scrollTo({top:0,behavior:'smooth'})}if(b.dataset.delete&&confirm('Delete this question?')){questions=questions.filter(x=>x.id!==q.id);persist()}});
+function loadVoices(){voices=speechSynthesis.getVoices();const select=$('voice');const keep=select.value;select.innerHTML='<option value="">Default phone voice</option>'+voices.map((v,i)=>`<option value="${i}">${esc(v.name)} (${esc(v.lang)})</option>`).join('');select.value=keep}
+if('speechSynthesis'in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function wait(ms){return new Promise(resolve=>{let start=Date.now(),remaining=ms,timer;const tick=()=>{if(stopRequested){resolve(false);return}if(paused){pauseWaiter=()=>{paused=false;const elapsed=Date.now()-start;remaining=Math.max(0,remaining-elapsed);start=Date.now();tick()};return}if(remaining<=0){resolve(true);return}timer=setTimeout(()=>{remaining=0;tick()},remaining)};tick()})}
+function speak(text,rate){return new Promise(resolve=>{if(stopRequested){resolve(false);return}const u=new SpeechSynthesisUtterance(text);u.rate=rate;const idx=$('voice').value;if(idx!==''&&voices[Number(idx)])u.voice=voices[Number(idx)];u.onend=()=>resolve(!stopRequested);u.onerror=()=>resolve(false);speechSynthesis.speak(u)})}
+async function runItems(items){if(!('speechSynthesis'in window)){alert('Text-to-speech is not supported in this browser. Try Chrome and check your phone text-to-speech settings.');return}if(currentRun){return}if(!items.length){alert('No questions to repeat.');return}const reps=Math.max(1,Math.min(500,parseInt($('count').value,10)||1)),rate=parseFloat($('speed').value),qPause=(parseFloat($('pause').value)||0)*1000,aPause=(parseFloat($('gap').value)||0)*1000;stopRequested=false;paused=false;currentRun=true;setControls(true);let total=reps*items.length,done=0;
+try{for(let r=1;r<=reps;r++){for(let i=0;i<items.length;i++){if(stopRequested)break;const q=items[i];$('status').textContent=`Repetition ${r} of ${reps} · Question ${i+1} of ${items.length}: ${q.question}`;let ok=await speak('Question. '+q.question,rate);if(!ok||stopRequested)break;ok=await wait(qPause);if(!ok||stopRequested)break;ok=await speak('Answer. '+q.answer,rate);if(!ok||stopRequested)break;done++;$('bar').style.width=(done/total*100)+'%';$('status').textContent=`Completed ${done} of ${total} question-and-answer repetitions.`;ok=await wait(aPause);if(!ok||stopRequested)break;}if(stopRequested)break}}finally{currentRun=null;paused=false;setControls(false);$('status').textContent=stopRequested?`Stopped. Completed ${done} of ${total} repetitions.`:`Finished! Completed ${done} of ${total} repetitions.`;stopRequested=false}}
+function setControls(running){$('startBtn').disabled=running;$('repeatAllBtn').disabled=running;$('pauseBtn').disabled=!running;$('stopBtn').disabled=!running;$('pauseBtn').textContent=paused?'▶ Resume':'Ⅱ Pause'}
+$('startBtn').addEventListener('click',()=>{let q=getForm();if(!q.question||!q.answer){alert('Enter a question and answer, or choose a saved question using Repeat this.');return}runItems([q])});
+$('repeatAllBtn').addEventListener('click',()=>runItems(filtered()));
+$('pauseBtn').addEventListener('click',()=>{if(!currentRun)return;if(paused){paused=false;speechSynthesis.resume();if(pauseWaiter){const f=pauseWaiter;pauseWaiter=null;f()}}else{paused=true;speechSynthesis.pause()}setControls(true)});
+$('stopBtn').addEventListener('click',()=>{stopRequested=true;paused=false;speechSynthesis.cancel();if(pauseWaiter){const f=pauseWaiter;pauseWaiter=null;f()}});
+$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='repeatstudy-backup.json';a.click();URL.revokeObjectURL(url)});
+$('importBtn').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw new Error();const valid=data.filter(q=>q&&q.question&&q.answer).map(q=>({...q,id:q.id||Date.now().toString(36)+Math.random().toString(36).slice(2,7),subject:q.subject||'Other',chapter:q.chapter||'General'}));questions=[...valid,...questions];persist();alert('Backup imported.');}catch(err){alert('That file does not look like a RepeatStudy backup.')}e.target.value=''});
+renderList();
+if('serviceWorker'in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+</script>
+</body></html>
